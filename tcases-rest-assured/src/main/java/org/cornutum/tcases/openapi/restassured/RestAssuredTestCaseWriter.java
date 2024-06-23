@@ -535,37 +535,6 @@ public class RestAssuredTestCaseWriter extends BaseTestCaseWriter
     }
 
   /**
-   * Returns the initializer code for the byte array representing the given data value.
-   */
-  private List<String> byteInitializerFor( DataValue<?> value)
-    {
-    final int lineSize = 16;
-
-    List<String> segments = new ArrayList<String>();
-    byte[] bytes = DataValueBinary.toBytes( value);
-
-    int from;
-    for( from = 0; bytes.length - from > lineSize; from += lineSize)
-      {
-      segments.add( String.format( "%s,", byteInitializerFor( bytes, from, from + lineSize)));
-      }
-    segments.add( byteInitializerFor( bytes, from, bytes.length));
-
-    return segments;
-    }
-
-  /**
-   * Returns the initializer code for the given byte array segment.
-   */
-  private String byteInitializerFor( byte[] bytes, int start, int end)
-    {
-    return
-      IntStream.range( start, end)
-      .mapToObj( i -> StringUtils.leftPad( String.valueOf( bytes[i]), 4))
-      .collect( joining( ","));
-    }
-
-  /**
    * Writes response expectations for a target test case to the given stream.
    */
   protected void writeExpectResponse( String testName, RequestCase requestCase, IndentedWriter targetWriter)
