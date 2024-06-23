@@ -77,7 +77,13 @@
             <artifactId>tcases-rest-assured</artifactId>
             <version>${project.version}</version>
         </dependency>
-        
+
+        <dependency>
+            <groupId>org.cornutum.tcases</groupId>
+            <artifactId>tcases-playwright</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>org.cornutum.tcases</groupId>
             <artifactId>tcases-moco</artifactId>
