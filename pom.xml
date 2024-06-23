@@ -294,6 +294,7 @@
     <module>tcases-openapi</module>
     <module>tcases-openapi-test</module>
     <module>tcases-rest-assured</module>
+    <module>tcases-playwright</module>
     <module>tcases-moco</module>
   </modules>
 
