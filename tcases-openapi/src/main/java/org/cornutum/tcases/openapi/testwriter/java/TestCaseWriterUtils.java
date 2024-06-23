@@ -15,13 +15,20 @@ import org.cornutum.tcases.openapi.resolver.HttpBasicDef;
 import org.cornutum.tcases.openapi.resolver.HttpBearerDef;
 import org.cornutum.tcases.openapi.resolver.RequestCase;
 import org.cornutum.tcases.openapi.testwriter.BaseTestCaseWriter.Depends;
+
+import static java.util.stream.Collectors.joining;
 import static org.cornutum.tcases.openapi.testwriter.TestWriterUtils.stringLiteral;
 
 import org.apache.commons.lang3.StringUtils;
+import org.cornutum.tcases.openapi.testwriter.encoder.DataValueBinary;
+import org.cornutum.tcases.resolve.DataValue;
 
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.IntStream;
 
 /**
  * Defines common methods for generating standard Java methods used by {@link org.cornutum.tcases.openapi.testwriter.TestCaseWriter} implementations.
@@ -209,6 +216,37 @@ public final class TestCaseWriterUtils
       String.format(
         "forTestServer(%s)",
         serverUri.map( uri -> String.format( " %s", stringLiteral( uri))) .orElse( ""));
+    }
+
+    /**
+   * Returns the initializer code for the byte array representing the given data value.
+   */
+    public static List<String> byteInitializerFor(DataValue<?> value)
+    {
+      final int lineSize = 16;
+
+      List<String> segments = new ArrayList<String>();
+      byte[] bytes = DataValueBinary.toBytes( value);
+
+      int from;
+      for( from = 0; bytes.length - from > lineSize; from += lineSize)
+      {
+        segments.add( String.format( "%s,", byteInitializerFor( bytes, from, from + lineSize)));
+      }
+      segments.add( byteInitializerFor( bytes, from, bytes.length));
+
+      return segments;
+    }
+
+    /**
+     * Returns the initializer code for the given byte array segment.
+     */
+    public static String byteInitializerFor( byte[] bytes, int start, int end)
+    {
+      return
+              IntStream.range( start, end)
+                      .mapToObj( i -> StringUtils.leftPad( String.valueOf( bytes[i]), 4))
+                      .collect( joining( ","));
     }
 
   /**

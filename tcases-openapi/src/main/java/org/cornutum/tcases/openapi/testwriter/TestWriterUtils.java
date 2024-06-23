@@ -157,21 +157,29 @@ public final class TestWriterUtils
    */
   public static String stringLiteral( Object value)
     {
-    String literal = null;
-    if( value != null)
-      {
-      Matcher escapeMatcher = literalEscaped_.matcher( Objects.toString( value, ""));
-      StringBuffer escaped = new StringBuffer();
-      while( escapeMatcher.find())
-        {
-        escapeMatcher.appendReplacement( escaped, String.format( "\\\\%s", Matcher.quoteReplacement( escapeMatcher.group())));
-        }
-      escapeMatcher.appendTail( escaped);
+      return stringLiteral(value, '"');
+    }
 
-      literal = String.format( "\"%s\"", escaped.toString());
+    /**
+     * Returns a string containing the source code for a string literal representing the given value with given quote.
+     */
+    public static String stringLiteral( Object value, char quote)
+    {
+      String literal = null;
+      if( value != null)
+      {
+        Matcher escapeMatcher = literalEscaped_.matcher( Objects.toString( value, ""));
+        StringBuffer escaped = new StringBuffer();
+        while( escapeMatcher.find())
+        {
+          escapeMatcher.appendReplacement( escaped, String.format( "\\\\%s", Matcher.quoteReplacement( escapeMatcher.group())));
+        }
+        escapeMatcher.appendTail( escaped);
+
+        literal = String.format( "%s%s%s", quote, escaped.toString(), quote);
       }
 
-    return literal;
+      return literal;
     }
 
   /**
