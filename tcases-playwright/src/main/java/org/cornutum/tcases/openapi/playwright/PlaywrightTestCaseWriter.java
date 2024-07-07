@@ -8,10 +8,8 @@ import org.cornutum.tcases.openapi.resolver.ParamDef.Location;
 import org.cornutum.tcases.openapi.test.MediaRange;
 import org.cornutum.tcases.openapi.testwriter.BaseTestCaseWriter;
 import org.cornutum.tcases.openapi.testwriter.TestWriterException;
-import org.cornutum.tcases.openapi.playwright.tryimport;
 import org.cornutum.tcases.openapi.testwriter.TestWriterUtils;
 import org.cornutum.tcases.openapi.testwriter.encoder.FormUrlEncoder;
-import org.cornutum.tcases.openapi.testwriter.encoder.SimpleValueEncoder;
 import org.cornutum.tcases.resolve.DataValue;
 import org.cornutum.tcases.resolve.ObjectValue;
 
@@ -20,12 +18,10 @@ import static org.cornutum.tcases.openapi.testwriter.java.TestCaseWriterUtils.*;
 
 import java.net.URI;
 import java.util.*;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 /**
@@ -124,21 +120,6 @@ public class PlaywrightTestCaseWriter extends BaseTestCaseWriter
     {
         targetWriter.println("import { expect as baseExpect, APIRequestContext, APIResponse } from '@playwright/test'");
         targetWriter.println();
-
-        if( getDepends().validateResponses())
-        {
-
-
-        }
-
-
-        if( getDepends().dependsMultipart())
-
-        {
-
-
-        }
-
     }
 
     @Override
@@ -147,6 +128,10 @@ public class PlaywrightTestCaseWriter extends BaseTestCaseWriter
         writeRequestOptionsType(targetWriter);
         writeStatusCodeExpectDef(testName, targetWriter, getDepends());
         writeAuthCredentialsDef(testName, targetWriter, getDepends());
+        if (getDepends().validateResponses())
+        {
+            writeResponseValidatorDef(testName, targetWriter);
+        }
     }
 
     @Override
@@ -541,16 +526,18 @@ public class PlaywrightTestCaseWriter extends BaseTestCaseWriter
                 }
             }
         }
-    }/**
- * Writes request authentication definitions for a target test case to the given stream.
- */
-protected void writeAuthDefs( String testName, RequestCase requestCase, IndentedWriter targetWriter)
-{
-    for( AuthDef authDef : requestCase.getAuthDefs())
-    {
-        writeAuthDef( testName, authDef, targetWriter);
     }
-}
+
+    /**
+     * Writes request authentication definitions for a target test case to the given stream.
+     **/
+    protected void writeAuthDefs( String testName, RequestCase requestCase, IndentedWriter targetWriter)
+    {
+        for( AuthDef authDef : requestCase.getAuthDefs())
+        {
+            writeAuthDef( testName, authDef, targetWriter);
+        }
+    }
 
     /**
      * Writes a request authentication definition for a target test case to the given stream.
@@ -627,6 +614,11 @@ protected void writeAuthDefs( String testName, RequestCase requestCase, Indented
         {
             targetWriter.println( "expect(response).toBeSuccess();");
         }
+    }
+
+    protected void writeResponseValidatorDef(String testName, IndentedWriter targetWriter)
+    {
+        targetWriter.println("const ");
     }
 
     /**

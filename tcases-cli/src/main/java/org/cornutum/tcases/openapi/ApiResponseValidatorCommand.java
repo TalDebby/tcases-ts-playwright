@@ -1,31 +1,16 @@
 package org.cornutum.tcases.openapi;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
-import io.swagger.annotations.Api;
 import org.cornutum.tcases.HelpException;
-import org.cornutum.tcases.SystemInputDef;
-import org.cornutum.tcases.Tcases;
-import org.cornutum.tcases.openapi.io.TcasesOpenApiIO;
-import org.cornutum.tcases.openapi.resolver.RequestCaseConditionNotifier;
-import org.cornutum.tcases.openapi.resolver.RequestCases;
-import org.cornutum.tcases.openapi.resolver.RequestTestDef;
 import org.cornutum.tcases.openapi.test.ResponseValidator;
-import org.cornutum.tcases.openapi.testwriter.TestCaseWriter;
-import org.cornutum.tcases.openapi.testwriter.TestSource;
-import org.cornutum.tcases.openapi.testwriter.TestTarget;
-import org.cornutum.tcases.openapi.testwriter.TestWriter;
-import org.cornutum.tcases.resolve.ResolverContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import javax.json.JsonObject;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.*;
 
-import static java.util.Collections.singleton;
 import static org.cornutum.tcases.CommandUtils.*;
 import static org.cornutum.tcases.CommandUtils.throwUsageException;
 
@@ -158,7 +143,7 @@ public class ApiResponseValidatorCommand {
                         throwMissingValue( arg);
                     }
                     try {
-                    setHeaders(args[i]);
+                        setHeaders(args[i]);
                     }
                     catch( Exception e)
                     {
@@ -381,8 +366,7 @@ public class ApiResponseValidatorCommand {
         {
             try
             {
-                setHeaders(new ObjectMapper().readValue(headers, new TypeReference<Map<String,List<String>>>(){}));
-            }
+                setHeaders(new ObjectMapper().readValue(headers, new TypeReference<Map<String,List<String>>>(){}));}
             catch (Exception e)
             {
                 throwUsageException( "Invalid content type", e);
@@ -483,12 +467,17 @@ public class ApiResponseValidatorCommand {
                 {
                     throwUsageException("Missing option, content");
                 }
+
+                logger_.info("Asserting body");
+
                 validator.assertBodyValid(options.getOperation(), options.getPath(), options.getStatusCode(),
                         options.getContentType(), options.getContent());
                 break;
             }
             case HEADERS:
             {
+                logger_.info("Asserting headers");
+
                 validator.assertHeadersValid(options.getOperation(), options.getPath(), options.getStatusCode(),
                         options.getHeaders());
                 break;

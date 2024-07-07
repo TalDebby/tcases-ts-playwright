@@ -10,13 +10,13 @@ set TCASES_HOME=%~dp0..
 set TCASES_LIB=%TCASES_HOME%\lib
 set API_ARGS=
 set API_LOG_DEST=tcases.log.file
-set API_LOG=tcases-api-test.log
+set API_LOG=tcases-response-validator.log
 set API_LOG_LEVEL=INFO
 
 :argsRead
-if "%1"=="" goto argsDone
-if "%1"=="-l" goto argsLogFile
-if "%1"=="-L" goto argsLogLevel
+if "%~1"=="" goto argsDone
+if "%~1"=="-l" goto argsLogFile
+if "%~1"=="-L" goto argsLogLevel
 set API_ARGS=%API_ARGS% %1
 goto argsNext
 
@@ -39,7 +39,6 @@ shift
 goto argsRead
 
 :argsDone
-
 set API_CP=%TCASES_LIB%
 for %%j in ("%TCASES_LIB%"\*.jar) do call :cpConcat "%%j"
 goto apiRun

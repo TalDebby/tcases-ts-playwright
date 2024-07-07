@@ -67,6 +67,8 @@
         <include>tcases-anon.bat</include>
         <include>tcases-copy</include>
         <include>tcases-copy.bat</include>
+        <include>tcases-response-validator</include>
+        <include>tcases-response-validator.bat</include>
       </includes>
       <fileMode>0755</fileMode>
     </fileSet>
