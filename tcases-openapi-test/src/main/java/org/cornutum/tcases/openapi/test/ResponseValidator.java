@@ -241,7 +241,6 @@ public class ResponseValidator
 
               validationErrors.ifPresent( errors -> reportValidationErrors( op, path, statusCode, headerName, "invalid value", errors));
               }
-
             else if ( headerDef.isRequired())
               {
               throw new ResponseValidationException( op, path, statusCode, headerName, "required header not received");

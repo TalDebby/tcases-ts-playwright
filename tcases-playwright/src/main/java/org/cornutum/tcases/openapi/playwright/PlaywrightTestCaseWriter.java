@@ -29,10 +29,35 @@ import java.util.stream.StreamSupport;
  */
 public class PlaywrightTestCaseWriter extends BaseTestCaseWriter
 {
-    public static void writeStatusCodeExpectDef( String testName, IndentedWriter targetWriter, Depends dependencies)
+    public void writeExpectDef(String testName, IndentedWriter targetWriter, Depends dependencies)
     {
         targetWriter.println("const expect = baseExpect.extend({");
         targetWriter.indent();
+
+        writeExpectSuccessStatusDef(testName, targetWriter);
+
+        if( dependencies.dependsFailure())
+        {
+            writeExpectBadStatusDef(testName, targetWriter);
+        }
+
+        if( dependencies.dependsAuthFailure())
+        {
+            writeExpectUnauthorizedStatusDef(testName, targetWriter);
+        }
+
+        if(dependencies.validateResponses())
+        {
+            writeExpectValidHeadersDef(testName, targetWriter);
+            writeExpectValidBodyDef(testName, targetWriter);
+        }
+        targetWriter.unindent();
+        targetWriter.println("})");
+        targetWriter.println();
+    }
+
+    public void writeExpectSuccessStatusDef(String testName, IndentedWriter targetWriter)
+    {
         targetWriter.println("toBeSuccess(response: APIResponse) {");
         targetWriter.indent();
         targetWriter.println("const assertionName = 'toBeSuccess';");
@@ -54,58 +79,177 @@ public class PlaywrightTestCaseWriter extends BaseTestCaseWriter
         targetWriter.println("};");
         targetWriter.unindent();
         targetWriter.println("},");
-        if( dependencies.dependsFailure())
-        {
-            targetWriter.println("toBeBadRequest(response: APIResponse) {");
-            targetWriter.indent();
-            targetWriter.println("const assertionName = 'toBeBadRequest';");
-            targetWriter.println("const pass = response.status() >= 400 && response.status() < 500;");
-            targetWriter.println();
-            targetWriter.println("const message = () =>");
-            targetWriter.indent();
-            targetWriter.println("this.utils.matcherHint(assertionName, undefined, undefined, { isNot: this.isNot }) +");
-            targetWriter.println("'\\n\\n' +");
-            targetWriter.println("`Status Code: ${response.status()}\\n` +");
-            targetWriter.println("`Expected: ${this.isNot ? 'not ' : ''}${\"between 400-500\"}\\n`;");
-            targetWriter.unindent();
-            targetWriter.println("return {");
-            targetWriter.indent();
-            targetWriter.println("message,");
-            targetWriter.println("pass,");
-            targetWriter.println("name: assertionName");
-            targetWriter.unindent();
-            targetWriter.println("};");
-            targetWriter.unindent();
-            targetWriter.println("},");
-        }
+    }
 
-        if( dependencies.dependsAuthFailure())
-        {
-            targetWriter.println("toBeUnauthorized(response: APIResponse) {");
-            targetWriter.indent();
-            targetWriter.println("const assertionName = 'toBeUnauthorized';");
-            targetWriter.println("const pass = response.status() == 401;");
-            targetWriter.println();
-            targetWriter.println("const message = () =>");
-            targetWriter.indent();
-            targetWriter.println("this.utils.matcherHint(assertionName, undefined, undefined, { isNot: this.isNot }) +");
-            targetWriter.println("'\\n\\n' +");
-            targetWriter.println("`Status Code: ${response.status()}\\n` +");
-            targetWriter.println("`Expected: ${this.isNot ? 'not ' : ''}${\"401\"}\\n`;");
-            targetWriter.unindent();
-            targetWriter.println("return {");
-            targetWriter.indent();
-            targetWriter.println("message,");
-            targetWriter.println("pass,");
-            targetWriter.println("name: assertionName");
-            targetWriter.unindent();
-            targetWriter.println("};");
-            targetWriter.unindent();
-            targetWriter.println("},");
-        }
-        targetWriter.unindent();
-        targetWriter.println("})");
+    public void writeExpectBadStatusDef(String testName, IndentedWriter targetWriter)
+    {
+        targetWriter.println("toBeBadRequest(response: APIResponse) {");
+        targetWriter.indent();
+        targetWriter.println("const assertionName = 'toBeBadRequest';");
+        targetWriter.println("const pass = response.status() >= 400 && response.status() < 500;");
         targetWriter.println();
+        targetWriter.println("const message = () =>");
+        targetWriter.indent();
+        targetWriter.println("this.utils.matcherHint(assertionName, undefined, undefined, { isNot: this.isNot }) +");
+        targetWriter.println("'\\n\\n' +");
+        targetWriter.println("`Status Code: ${response.status()}\\n` +");
+        targetWriter.println("`Expected: ${this.isNot ? 'not ' : ''}${\"between 400-500\"}\\n`;");
+        targetWriter.unindent();
+        targetWriter.println("return {");
+        targetWriter.indent();
+        targetWriter.println("message,");
+        targetWriter.println("pass,");
+        targetWriter.println("name: assertionName");
+        targetWriter.unindent();
+        targetWriter.println("};");
+        targetWriter.unindent();
+        targetWriter.println("},");
+    }
+    public void writeExpectUnauthorizedStatusDef(String testName, IndentedWriter targetWriter)
+    {
+        targetWriter.println("toBeUnauthorized(response: APIResponse) {");
+        targetWriter.indent();
+        targetWriter.println("const assertionName = 'toBeUnauthorized';");
+        targetWriter.println("const pass = response.status() == 401;");
+        targetWriter.println();
+        targetWriter.println("const message = () =>");
+        targetWriter.indent();
+        targetWriter.println("this.utils.matcherHint(assertionName, undefined, undefined, { isNot: this.isNot }) +");
+        targetWriter.println("'\\n\\n' +");
+        targetWriter.println("`Status Code: ${response.status()}\\n` +");
+        targetWriter.println("`Expected: ${this.isNot ? 'not ' : ''}${\"401\"}\\n`;");
+        targetWriter.unindent();
+        targetWriter.println("return {");
+        targetWriter.indent();
+        targetWriter.println("message,");
+        targetWriter.println("pass,");
+        targetWriter.println("name: assertionName");
+        targetWriter.unindent();
+        targetWriter.println("};");
+        targetWriter.unindent();
+        targetWriter.println("},");
+    }
+
+    public void writeExpectValidHeadersDef(String testName, IndentedWriter targetWriter)
+    {
+        targetWriter.println("async toBeValidHeaders(response: APIResponse, requestType: string, path: string," +
+                " id: string)");
+        targetWriter.println("{");
+        targetWriter.indent();
+        targetWriter.println("let pass = true;");
+        targetWriter.println("let message = () => '';");
+        targetWriter.println("const assertionName = 'toBeValidHeaders';");
+        targetWriter.println("const headersFile = `./resources/headers${id}.json`;");
+        targetWriter.println("try");
+        targetWriter.println("{");
+        targetWriter.indent();
+        targetWriter.println("writeFileSync(headersFile, JSON.stringify(response.headersArray().map(header => " +
+                "({[header.name]: header.value}))));");
+        targetWriter.println("const result = await execShellCommand(");
+        targetWriter.indent();
+        targetWriter.println("`tcases-response-validator headers -r ${requestType} -p ${path} " +
+                "-s ${response.status()} -h ${headersFile} ${responsesPath}`");
+        targetWriter.unindent();
+        targetWriter.println(");");
+        targetWriter.println("result ?? unlinkSync(headersFile);");
+        targetWriter.println("pass = result ? false: true;");
+        targetWriter.println("message = () => this.utils.matcherHint(assertionName, undefined, undefined, " +
+                "{ isNot: this.isNot }) +");
+        targetWriter.indent();
+        targetWriter.println("'\\n\\n' +");
+        targetWriter.println("result?.message;");
+        targetWriter.unindent();
+        targetWriter.unindent();
+        targetWriter.println("} catch (e) {");
+        targetWriter.indent();
+        targetWriter.println("pass = false;");
+        targetWriter.println("if (e instanceof Error)");
+        targetWriter.indent();
+        targetWriter.println("message = () => e.message;");
+        targetWriter.unindent();
+        targetWriter.unindent();
+        targetWriter.println("}");
+        targetWriter.println();
+        targetWriter.println("return {");
+        targetWriter.indent();
+        targetWriter.println("message,");
+        targetWriter.println("pass,");
+        targetWriter.println("name: assertionName");
+        targetWriter.unindent();
+        targetWriter.println("};");
+        targetWriter.unindent();
+        targetWriter.println("},");
+    }
+
+    public void writeExpectValidBodyDef(String testName, IndentedWriter targetWriter)
+    {
+        targetWriter.println("async toBeValidBody(response: APIResponse, requestType: string, path: string, " +
+                "id: string)");
+        targetWriter.println("{");
+        targetWriter.indent();
+        targetWriter.println("let pass = true;");
+        targetWriter.println("let message = () => '';");
+        targetWriter.println("const assertionName = 'toBeValidHeaders';");
+        targetWriter.println("const contentFile = `./resources/body${id}`;");
+        targetWriter.println("try {");
+        targetWriter.indent();
+        targetWriter.println("writeFileSync(contentFile, await response.body());");
+        targetWriter.println("const result = await execShellCommand(");
+        targetWriter.indent();
+        targetWriter.println("`tcases-response-validator body -r ${requestType} -p ${path} " +
+                "-s ${response.status()} -f \"${response.headers()['content-type']}\" -c ${contentFile} ${responsesPath}`");
+        targetWriter.unindent();
+        targetWriter.println(");");
+        targetWriter.println("result ?? unlinkSync(contentFile)");
+        targetWriter.println("pass = result ? false: true;");
+        targetWriter.println("message = () => this.utils.matcherHint(assertionName, undefined, undefined, " +
+                "{ isNot: this.isNot }) +");
+        targetWriter.indent();
+        targetWriter.println("'\\n\\n' +");
+        targetWriter.println("result?.message;");
+        targetWriter.unindent();
+        targetWriter.unindent();
+        targetWriter.println("} catch (e) {");
+        targetWriter.indent();
+        targetWriter.println("pass = false;");
+        targetWriter.println("if (e instanceof Error)");
+        targetWriter.indent();
+        targetWriter.println("message = () => e.message;");
+        targetWriter.unindent();
+        targetWriter.unindent();
+        targetWriter.println("}");
+        targetWriter.println("return {");
+        targetWriter.indent();
+        targetWriter.println("message,");
+        targetWriter.println("pass,");
+        targetWriter.println("name: assertionName");
+        targetWriter.unindent();
+        targetWriter.println("};");
+        targetWriter.unindent();
+        targetWriter.println("},");
+    }
+
+    public void writeExecShellCommandDef(String testName, IndentedWriter targetWriter)
+    {
+        targetWriter.println("const execShellCommand = (cmd: string) => {");
+        targetWriter.indent();
+        targetWriter.println("return new Promise<ExecException | undefined>((resolve, reject) => {");
+        targetWriter.indent();
+        targetWriter.println("exec(cmd, (error, stdout, stderr) => {");
+        targetWriter.indent();
+        targetWriter.println("if (error) {");
+        targetWriter.indent();
+        targetWriter.println("console.warn(error);");
+        targetWriter.unindent();
+        targetWriter.println("}");
+        targetWriter.println();
+        targetWriter.println("resolve(error ? error : undefined);");
+        targetWriter.unindent();
+        targetWriter.println("});");
+        targetWriter.unindent();
+        targetWriter.println("});");
+        targetWriter.unindent();
+        targetWriter.println("};");
     }
 
     /**
@@ -113,12 +257,15 @@ public class PlaywrightTestCaseWriter extends BaseTestCaseWriter
      */
     public  PlaywrightTestCaseWriter()
     {
+
     }
 
     @Override
     public void writeDependencies(String testName, IndentedWriter targetWriter)
     {
         targetWriter.println("import { expect as baseExpect, APIRequestContext, APIResponse } from '@playwright/test'");
+        targetWriter.println("import { ExecException, exec } from \"child_process\";");
+        targetWriter.println("import { writeFileSync, unlinkSync} from \"fs\";");
         targetWriter.println();
     }
 
@@ -126,12 +273,12 @@ public class PlaywrightTestCaseWriter extends BaseTestCaseWriter
     public void writeDeclarations(String testName, IndentedWriter targetWriter)
     {
         writeRequestOptionsType(targetWriter);
-        writeStatusCodeExpectDef(testName, targetWriter, getDepends());
-        writeAuthCredentialsDef(testName, targetWriter, getDepends());
         if (getDepends().validateResponses())
         {
-            writeResponseValidatorDef(testName, targetWriter);
+            writeExecShellCommandDef(testName, targetWriter);
         }
+        writeExpectDef(testName, targetWriter, getDepends());
+        writeAuthCredentialsDef(testName, targetWriter, getDepends());
     }
 
     @Override
@@ -164,8 +311,7 @@ public class PlaywrightTestCaseWriter extends BaseTestCaseWriter
 
             writeRequest(requestCase, targetWriter);
             targetWriter.println();
-            writeExpectResponse(testName, requestCase, targetWriter);
-
+            writeExpectResponse(testName, requestCase, targetWriter, getDepends());
             targetWriter.unindent();
             targetWriter.print("}");
         }
@@ -602,7 +748,8 @@ public class PlaywrightTestCaseWriter extends BaseTestCaseWriter
     /**
      * Writes response expectations for a target test case to the given stream.
      */
-    protected void writeExpectResponse( String testName, RequestCase requestCase, IndentedWriter targetWriter)
+    protected void writeExpectResponse( String testName, RequestCase requestCase,
+                                        IndentedWriter targetWriter, Depends dependencies)
     {
         if( requestCase.isFailure())
         {
@@ -614,11 +761,18 @@ public class PlaywrightTestCaseWriter extends BaseTestCaseWriter
         {
             targetWriter.println( "expect(response).toBeSuccess();");
         }
-    }
 
-    protected void writeResponseValidatorDef(String testName, IndentedWriter targetWriter)
-    {
-        targetWriter.println("const ");
+        if(dependencies.validateResponses())
+        {
+            targetWriter.println(String.format("await expect(response).toBeValidHeaders(%s, %s, %s)",
+                    stringLiteral(requestCase.getOperation(), '\''),
+                    stringLiteral(requestCase.getPath(), '\''),
+                    stringLiteral(requestCase.getId(), '\'')));
+            targetWriter.println(String.format("await expect(response).toBeValidHeaders(%s, %s, %s)",
+                    stringLiteral(requestCase.getOperation(), '\''),
+                    stringLiteral(requestCase.getPath(), '\''),
+                    stringLiteral(requestCase.getId(), '\'')));
+        }
     }
 
     /**

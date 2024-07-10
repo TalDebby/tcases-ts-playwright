@@ -2,9 +2,13 @@ package org.cornutum.tcases.openapi.testwriter;
 
 import org.cornutum.tcases.io.IndentedWriter;
 import org.cornutum.tcases.openapi.resolver.RequestCase;
+
+import java.io.File;
+
+import static org.apache.commons.io.FilenameUtils.getBaseName;
 import static org.cornutum.tcases.openapi.testwriter.TestWriterUtils.*;
 
-public class PlaywrightRunnerTestWriter extends TypescriptTestWriter{
+public class PlaywrightRunnerTestWriter extends TypescriptTestWriter {
     /**
      * Creates a new PlaywrightRunnerTestWriter instance.
      */
@@ -18,6 +22,9 @@ public class PlaywrightRunnerTestWriter extends TypescriptTestWriter{
         super.writeDependencies( target, testName, targetWriter);
 
         targetWriter.println("import test from '@playwright/test'");
+
+        targetWriter.println(String.format("const responsesPath = %s",
+                stringLiteral(getResponsesFile(target, testName).getAbsolutePath()), '\''));
     }
 
     /**
@@ -39,5 +46,13 @@ public class PlaywrightRunnerTestWriter extends TypescriptTestWriter{
     @Override
     protected void writeClosing(TestTarget target, String testName, IndentedWriter targetWriter)
     {
+    }
+
+    protected File getResponsesFile(TestTarget target, String testName)
+    {
+        File targetFile = getTargetFile(target, testName);
+        File resourceDir = getTestResourceDir(targetFile, target.getResourceDir());
+        File responsesFile = new File(resourceDir, String.format( "%s-Responses.json", getBaseName( targetFile.getName())));
+        return responsesFile;
     }
 }

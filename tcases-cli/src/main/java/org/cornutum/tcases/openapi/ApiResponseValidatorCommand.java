@@ -1,6 +1,7 @@
 package org.cornutum.tcases.openapi;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import org.apache.commons.io.FileUtils;
 import org.cornutum.tcases.HelpException;
 import org.cornutum.tcases.openapi.test.ResponseValidator;
 import org.slf4j.Logger;
@@ -10,6 +11,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.*;
+import static java.util.stream.Collectors.*;
+
 
 import static org.cornutum.tcases.CommandUtils.*;
 import static org.cornutum.tcases.CommandUtils.throwUsageException;
@@ -348,7 +351,7 @@ public class ApiResponseValidatorCommand {
          */
         public void setContent(String content)
         {
-            this.Content_ = content;
+            this.Content_ = new File(content);
         }
 
         /**
@@ -356,7 +359,27 @@ public class ApiResponseValidatorCommand {
          */
         public String getContent()
         {
-            return Content_;
+            String content = "";
+            File contentFile = this.Headers_;
+            if( contentFile != null && !contentFile.isAbsolute())
+            {
+                contentFile = new File( this.getWorkingDir(), contentFile.getPath());
+            }
+
+            try
+            {
+                if(contentFile != null)
+                {
+                    content = FileUtils.readFileToString(contentFile, "UTF-8");
+                }
+            }
+            catch (Exception e)
+            {
+                throwUsageException( "Invalid content type", e);
+            }
+
+            return content;
+
         }
 
         /**
@@ -364,21 +387,7 @@ public class ApiResponseValidatorCommand {
          */
         public void setHeaders(String headers)
         {
-            try
-            {
-                setHeaders(new ObjectMapper().readValue(headers, new TypeReference<Map<String,List<String>>>(){}));}
-            catch (Exception e)
-            {
-                throwUsageException( "Invalid content type", e);
-            }
-        }
-
-        /**
-         * Changes the response headers
-         */
-        public void setHeaders(Map<String, List<String>> headers)
-        {
-            this.Headers_ = headers;
+            this.Headers_ = new File(headers);
         }
 
         /**
@@ -386,7 +395,27 @@ public class ApiResponseValidatorCommand {
          */
         public Map<String, List<String>> getHeaders()
         {
-            return Headers_;
+            Map<String,List<String>> headers = null;
+            File headersFile = this.Headers_;
+            if( headersFile != null && !headersFile.isAbsolute())
+            {
+                headersFile = new File( this.getWorkingDir(), headersFile.getPath());
+            }
+
+            try
+            {
+                headers = (new ObjectMapper().
+                        readValue(headersFile, new TypeReference<ArrayList<Map.Entry<String,String>>>(){}))
+                        .stream().collect(
+                                groupingBy(Map.Entry::getKey,
+                                        mapping(Map.Entry::getValue, toList())));
+            }
+            catch (Exception e)
+            {
+                throwUsageException( "Invalid content type", e);
+            }
+
+            return headers;
         }
 
         private File apiResponses_;
@@ -397,8 +426,8 @@ public class ApiResponseValidatorCommand {
         private String Path_;
         private int StatusCode_;
         private String ContentType_;
-        private String Content_;
-        private Map<String, List<String>> Headers_;
+        private File Content_;
+        private File Headers_;
     }
 
 
