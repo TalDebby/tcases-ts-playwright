@@ -163,10 +163,7 @@ public class PlaywrightTestCaseWriter extends BaseTestCaseWriter
         targetWriter.println("} catch (e) {");
         targetWriter.indent();
         targetWriter.println("pass = false;");
-        targetWriter.println("if (e instanceof Error)");
-        targetWriter.indent();
-        targetWriter.println("message = () => e.message;");
-        targetWriter.unindent();
+        targetWriter.println("message = () => (e instanceof Error ? e.message : '');");
         targetWriter.unindent();
         targetWriter.println("}");
         targetWriter.println();
@@ -263,8 +260,8 @@ public class PlaywrightTestCaseWriter extends BaseTestCaseWriter
     @Override
     public void writeDependencies(String testName, IndentedWriter targetWriter)
     {
-        targetWriter.println("import { expect as baseExpect, APIRequestContext, APIResponse } from '@playwright/test'");
-        targetWriter.println("import { ExecException, exec } from \"child_process\";");
+        targetWriter.println("import { expect as baseExpect, type APIRequestContext, type APIResponse } from '@playwright/test'");
+        targetWriter.println("import { type ExecException, exec } from \"child_process\";");
         targetWriter.println("import { writeFileSync, unlinkSync} from \"fs\";");
         targetWriter.println();
     }
@@ -700,7 +697,7 @@ public class PlaywrightTestCaseWriter extends BaseTestCaseWriter
 
             case HEADER:
             {
-                targetWriter.println( String.format( "requestOptions.headers = { ...requestOptions.headers, %s: %s};", stringLiteral( authDef.getName()), "tcasesApiKey()"));
+                targetWriter.println( String.format( "requestOptions.headers = { ...requestOptions.headers, %s: %s};", stringLiteral( authDef.getName()), headerValueOf( authDef)));
                 break;
             }
 
