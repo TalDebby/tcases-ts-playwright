@@ -304,6 +304,18 @@ public class ApiTestCommand
    * certificate. Otherwise, by default, the API server must present a trusted certificate.
    * </TD>
    * </TR>
+   * <TR valign="top">
+   * <TD>
+   * &nbsp;
+   * </TD>
+   * <TD>
+   * <NOBR>-D</NOBR>
+   * </TD>
+   * <TD>
+   * If specified, generated HTTPS requests will connect to the API server without verifying the server
+   * certificate. Otherwise, by default, the API server must present a trusted certificate.
+   * </TD>
+   * </TR>
    *
    * <TR valign="top">
    * <TD>
@@ -628,6 +640,11 @@ public class ApiTestCommand
         setServerTrusted( true);
       }
 
+      else if( arg.equals( "-D"))
+      {
+        setDependsServer( true);
+      }
+
       else if( arg.equals( "-c"))
       {
         i++;
@@ -818,6 +835,7 @@ public class ApiTestCommand
                       "                   uri=<uri>",
                       "                       Use the specified <uri>.",
                       "",
+                      "  -D",
                       "  -V              If specified, generated HTTPS requests will connect to the API server without verifying",
                       "                  the server certificate. Otherwise, by default, the API server must present a trusted",
                       "                  certificate.",
@@ -1186,7 +1204,20 @@ public class ApiTestCommand
     {
       return serverTrusted_;
     }
-
+    /**
+     * Changes if HTTPS requests' URI will be determined by an environment variables .
+     */
+    public void setDependsServer( boolean dependsServer)
+    {
+      dependsServer_ = dependsServer;
+    }
+    /**
+     * Returns if HTTPS requests' URI will be determined by an environment variables .
+     */
+    public boolean isDependsServer()
+    {
+      return dependsServer_;
+    }
     /**
      * Changes the OpenApi definition file content type.
      */
@@ -1581,6 +1612,7 @@ public class ApiTestCommand
 
       testCaseWriter.setValidateResponses( hasResources());
       testCaseWriter.setTrustServer( isServerTrusted());
+      testCaseWriter.setDependsServer( isDependsServer());
 
       return testCaseWriter;
     }
@@ -1648,6 +1680,7 @@ public class ApiTestCommand
     private boolean showVersion_;
     private Long randomSeed_;
     private boolean serverTrusted_;
+    private boolean dependsServer_;
 
     private static final Pattern serverExprPattern_ = Pattern.compile( "(index|contains|uri)=(.+)");
 
@@ -1768,6 +1801,17 @@ public class ApiTestCommand
       public Builder serverTrusted()
       {
         return serverTrusted( true);
+      }
+
+      public Builder dependsServer( boolean dependsServer)
+      {
+        options_.setDependsServer(dependsServer);
+        return this;
+      }
+
+      public Builder dependsServer()
+      {
+        return dependsServer( true);
       }
 
       public Builder contentType( String type)

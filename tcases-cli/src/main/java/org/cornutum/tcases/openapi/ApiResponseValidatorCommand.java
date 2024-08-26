@@ -360,7 +360,7 @@ public class ApiResponseValidatorCommand {
         public String getContent()
         {
             String content = "";
-            File contentFile = this.Headers_;
+            File contentFile = this.Content_;
             if( contentFile != null && !contentFile.isAbsolute())
             {
                 contentFile = new File( this.getWorkingDir(), contentFile.getPath());
@@ -371,6 +371,7 @@ public class ApiResponseValidatorCommand {
                 if(contentFile != null)
                 {
                     content = FileUtils.readFileToString(contentFile, "UTF-8");
+                    System.out.println(content);
                 }
             }
             catch (Exception e)

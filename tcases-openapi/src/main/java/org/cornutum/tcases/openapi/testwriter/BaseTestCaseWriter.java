@@ -40,6 +40,7 @@ public abstract class BaseTestCaseWriter implements TestCaseWriter
     {
     setValidateResponses( true);
     setTrustServer( false);
+    setDependsServer( false);
     getDefaultConverters().forEach( (mediaType,converter) -> setConverter( mediaType, converter));
     }
   
@@ -76,6 +77,20 @@ public abstract class BaseTestCaseWriter implements TestCaseWriter
     }
 
   /**
+   * Changes if HTTPS requests' URI will be determined by an environment variables .
+   */
+  public void setDependsServer( boolean dependsServer)
+  {
+    dependsServer_ = dependsServer;
+  }
+  /**
+  * Returns if HTTPS requests' URI will be determined by an environment variables .
+  */
+  public boolean isDependsServer()
+  {
+    return dependsServer_;
+  }
+  /**
    * Returns the test case dependencies used by this writer.
    */
   public Depends getDepends()
@@ -93,6 +108,7 @@ public abstract class BaseTestCaseWriter implements TestCaseWriter
 
     depends_.setValidateResponses( validateResponses());
     depends_.setTrustServer( trustServer());
+    depends_.setDependsServer(isDependsServer());
 
     AuthDependsVisitor authDependsVisitor = new AuthDependsVisitor();
     requestCases.stream()
@@ -204,6 +220,7 @@ public abstract class BaseTestCaseWriter implements TestCaseWriter
   private final Map<String,DataValueConverter<String>> converters_ = new HashMap<String,DataValueConverter<String>>();
   private boolean validateResponses_;
   private boolean trustServer_;
+  private boolean dependsServer_;
   private Depends depends_;
 
   /**
@@ -252,12 +269,20 @@ public abstract class BaseTestCaseWriter implements TestCaseWriter
       return trustServer_;
       }
 
+      /**
+       * Registers a dependency on a runtime API server definition.
+       */
+    public void setDependsServer( boolean dependsServer)
+      {
+        dependsServer_ = dependsServer;
+      }
+
     /**
      * Registers a dependency on a runtime API server definition.
      */
     public void setDependsServer()
       {
-      dependsServer_ = true;
+      setDependsServer(true);
       }
     
     /**

@@ -276,6 +276,7 @@ public class PlaywrightTestCaseWriter extends BaseTestCaseWriter
         }
         writeExpectDef(testName, targetWriter, getDepends());
         writeAuthCredentialsDef(testName, targetWriter, getDepends());
+        writeTestServerDef( testName, targetWriter, getDepends());
     }
 
     @Override
@@ -566,7 +567,7 @@ public class PlaywrightTestCaseWriter extends BaseTestCaseWriter
 
         targetWriter.unindent();
         targetWriter.println("});");
-        targetWriter.println(String.format("const uri = new URL(%s);", stringLiteral(serverUri.orElse(""))));
+        targetWriter.println(String.format("const uri = new URL(%s);", forTestServer(serverUri)));
     }
 
     /**
@@ -765,7 +766,7 @@ public class PlaywrightTestCaseWriter extends BaseTestCaseWriter
                     stringLiteral(requestCase.getOperation(), '\''),
                     stringLiteral(requestCase.getPath(), '\''),
                     stringLiteral(requestCase.getId(), '\'')));
-            targetWriter.println(String.format("await expect(response).toBeValidHeaders(%s, %s, %s)",
+            targetWriter.println(String.format("await expect(response).toBeValidBody(%s, %s, %s)",
                     stringLiteral(requestCase.getOperation(), '\''),
                     stringLiteral(requestCase.getPath(), '\''),
                     stringLiteral(requestCase.getId(), '\'')));
@@ -814,6 +815,33 @@ public class PlaywrightTestCaseWriter extends BaseTestCaseWriter
             targetWriter.println("}");
             targetWriter.unindent();
             targetWriter.println("};");
+            targetWriter.println();
+        }
+    }
+
+    protected void writeTestServerDef( String testName, IndentedWriter targetWriter, Depends dependencies)
+    {
+        targetWriter.println( "const tcasesApiServer = () => process.env.tcasesApiServer ?? '';");
+
+        if( dependencies.dependsServer())
+        {
+            targetWriter.println();
+            targetWriter.println( "const forTestServer() => tcasesApiServer()");
+        }
+        else
+        {
+            targetWriter.println();
+            targetWriter.println( "const forTestServer = (defaultUri?: string) => {");
+            targetWriter.indent();
+            targetWriter.println( "const testServer = tcasesApiServer();");
+            targetWriter.println( "return");
+            targetWriter.indent();
+            targetWriter.println( "defaultUri == undefined || testServer != ''");
+            targetWriter.println( "? testServer");
+            targetWriter.println( ": defaultUri;");
+            targetWriter.unindent();
+            targetWriter.unindent();
+            targetWriter.println( "}");
             targetWriter.println();
         }
     }
