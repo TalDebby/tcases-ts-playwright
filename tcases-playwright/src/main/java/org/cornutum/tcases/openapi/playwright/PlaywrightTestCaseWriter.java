@@ -567,7 +567,9 @@ public class PlaywrightTestCaseWriter extends BaseTestCaseWriter
 
         targetWriter.unindent();
         targetWriter.println("});");
-        targetWriter.println(String.format("const uri = new URL(%s);", forTestServer(serverUri)));
+        targetWriter.println(String.format("const uri = new URL(%s);", forTestServer(getDepends().dependsServer() ?
+                Optional.empty() :
+                serverUri)));
     }
 
     /**
@@ -826,7 +828,7 @@ public class PlaywrightTestCaseWriter extends BaseTestCaseWriter
         if( dependencies.dependsServer())
         {
             targetWriter.println();
-            targetWriter.println( "const forTestServer() => tcasesApiServer()");
+            targetWriter.println( "const forTestServer = tcasesApiServer;");
         }
         else
         {

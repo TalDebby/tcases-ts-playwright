@@ -321,7 +321,9 @@ public class RestAssuredTestCaseWriter extends BaseTestCaseWriter
   protected void writeServer( String testName, URI testServer, RequestCase requestCase, IndentedWriter targetWriter)
     {
     Optional<String> serverUri = serverUri( testServer, requestCase);
-    targetWriter.println( String.format(".baseUri( %s)", forTestServer( serverUri)));
+    targetWriter.println( String.format(".baseUri( %s)", forTestServer( getDepends().dependsServer() ?
+            Optional.empty() :
+            serverUri)));
 
     if( !serverUri.isPresent())
       {
