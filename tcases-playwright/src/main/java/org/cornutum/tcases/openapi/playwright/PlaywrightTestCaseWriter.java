@@ -132,27 +132,22 @@ public class PlaywrightTestCaseWriter extends BaseTestCaseWriter
 
     public void writeExpectValidHeadersDef(String testName, IndentedWriter targetWriter)
     {
-        targetWriter.println("async toBeValidHeaders(response: APIResponse, requestType: string, path: string," +
-                " id: string)");
+        targetWriter.println("async toBeValidHeaders(response: APIResponse, requestType: string, path: string)");
         targetWriter.println("{");
         targetWriter.indent();
         targetWriter.println("let pass = true;");
         targetWriter.println("let message = () => '';");
         targetWriter.println("const assertionName = 'toBeValidHeaders';");
-        targetWriter.println("const headersFile = `./resources/headers${id}.json`;");
         targetWriter.println("try");
         targetWriter.println("{");
         targetWriter.indent();
-        targetWriter.println("writeFileSync(headersFile, JSON.stringify(response.headersArray().map(header => " +
-                "({[header.name]: header.value}))));");
         targetWriter.println("const result = await execShellCommand(");
         targetWriter.indent();
-        targetWriter.println("`tcases-response-validator headers -r ${requestType} -p ${path} " +
-                "-s ${response.status()} -h ${headersFile} ${responsesPath}`");
+        targetWriter.println("`tcases-response-validator headers -r ${requestType} -p ${path} -s ${response.status()} -h - ${responsesPath}`,");
+        targetWriter.println("JSON.stringify(response.headersArray().map(header => ({[header.name]: header.value})))");
         targetWriter.unindent();
         targetWriter.println(");");
-        targetWriter.println("result ?? unlinkSync(headersFile);");
-        targetWriter.println("pass = result ? false: true;");
+        targetWriter.println("pass = !result;");
         targetWriter.println("message = () => this.utils.matcherHint(assertionName, undefined, undefined, " +
                 "{ isNot: this.isNot }) +");
         targetWriter.indent();
@@ -180,25 +175,22 @@ public class PlaywrightTestCaseWriter extends BaseTestCaseWriter
 
     public void writeExpectValidBodyDef(String testName, IndentedWriter targetWriter)
     {
-        targetWriter.println("async toBeValidBody(response: APIResponse, requestType: string, path: string, " +
-                "id: string)");
+        targetWriter.println("async toBeValidBody(response: APIResponse, requestType: string, path: string)");
         targetWriter.println("{");
         targetWriter.indent();
         targetWriter.println("let pass = true;");
         targetWriter.println("let message = () => '';");
         targetWriter.println("const assertionName = 'toBeValidHeaders';");
-        targetWriter.println("const contentFile = `./resources/body${id}`;");
         targetWriter.println("try {");
         targetWriter.indent();
-        targetWriter.println("writeFileSync(contentFile, await response.body());");
         targetWriter.println("const result = await execShellCommand(");
         targetWriter.indent();
-        targetWriter.println("`tcases-response-validator body -r ${requestType} -p ${path} " +
-                "-s ${response.status()} -f \"${response.headers()['content-type']}\" -c ${contentFile} ${responsesPath}`");
+        targetWriter.println("`tcases-response-validator body -r ${requestType} -p ${path} -s ${response.status()} " +
+                "-f \"${response.headers()['content-type']}\" -c - ${responsesPath}`,");
+        targetWriter.println("(await response.body()).toString(\"utf-8\")");
         targetWriter.unindent();
         targetWriter.println(");");
-        targetWriter.println("result ?? unlinkSync(contentFile)");
-        targetWriter.println("pass = result ? false: true;");
+        targetWriter.println("pass = !result;");
         targetWriter.println("message = () => this.utils.matcherHint(assertionName, undefined, undefined, " +
                 "{ isNot: this.isNot }) +");
         targetWriter.indent();
@@ -228,11 +220,11 @@ public class PlaywrightTestCaseWriter extends BaseTestCaseWriter
 
     public void writeExecShellCommandDef(String testName, IndentedWriter targetWriter)
     {
-        targetWriter.println("const execShellCommand = (cmd: string) => {");
+        targetWriter.println("const execShellCommand = (command: string, stdinData: string) => {");
         targetWriter.indent();
         targetWriter.println("return new Promise<ExecException | undefined>((resolve, reject) => {");
         targetWriter.indent();
-        targetWriter.println("exec(cmd, (error, stdout, stderr) => {");
+        targetWriter.println("const child = exec(command, (error, stdout, stderr) => {");
         targetWriter.indent();
         targetWriter.println("if (error) {");
         targetWriter.indent();
@@ -243,6 +235,9 @@ public class PlaywrightTestCaseWriter extends BaseTestCaseWriter
         targetWriter.println("resolve(error ? error : undefined);");
         targetWriter.unindent();
         targetWriter.println("});");
+        targetWriter.println();
+        targetWriter.println("child.stdin?.write(stdinData);");
+        targetWriter.println("child.stdin?.end();");
         targetWriter.unindent();
         targetWriter.println("});");
         targetWriter.unindent();
@@ -262,7 +257,6 @@ public class PlaywrightTestCaseWriter extends BaseTestCaseWriter
     {
         targetWriter.println("import { expect as baseExpect, type APIRequestContext, type APIResponse } from '@playwright/test'");
         targetWriter.println("import { type ExecException, exec } from \"child_process\";");
-        targetWriter.println("import { writeFileSync, unlinkSync} from \"fs\";");
         targetWriter.println();
     }
 
@@ -764,14 +758,12 @@ public class PlaywrightTestCaseWriter extends BaseTestCaseWriter
 
         if(dependencies.validateResponses())
         {
-            targetWriter.println(String.format("await expect(response).toBeValidHeaders(%s, %s, %s)",
+            targetWriter.println(String.format("await expect(response).toBeValidHeaders(%s, %s)",
                     stringLiteral(requestCase.getOperation(), '\''),
-                    stringLiteral(requestCase.getPath(), '\''),
-                    stringLiteral(requestCase.getId(), '\'')));
-            targetWriter.println(String.format("await expect(response).toBeValidBody(%s, %s, %s)",
+                    stringLiteral(requestCase.getPath(), '\'')));
+            targetWriter.println(String.format("await expect(response).toBeValidBody(%s, %s)",
                     stringLiteral(requestCase.getOperation(), '\''),
-                    stringLiteral(requestCase.getPath(), '\''),
-                    stringLiteral(requestCase.getId(), '\'')));
+                    stringLiteral(requestCase.getPath(), '\'')));
         }
     }
 
@@ -836,9 +828,8 @@ public class PlaywrightTestCaseWriter extends BaseTestCaseWriter
             targetWriter.println( "const forTestServer = (defaultUri?: string) => {");
             targetWriter.indent();
             targetWriter.println( "const testServer = tcasesApiServer();");
-            targetWriter.println( "return");
+            targetWriter.println( "return defaultUri == undefined || testServer != ''");
             targetWriter.indent();
-            targetWriter.println( "defaultUri == undefined || testServer != ''");
             targetWriter.println( "? testServer");
             targetWriter.println( ": defaultUri;");
             targetWriter.unindent();
