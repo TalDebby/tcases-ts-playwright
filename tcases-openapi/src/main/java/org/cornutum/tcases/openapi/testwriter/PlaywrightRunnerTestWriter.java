@@ -24,7 +24,7 @@ public class PlaywrightRunnerTestWriter extends TypescriptTestWriter {
         targetWriter.println("import test from '@playwright/test'");
 
         targetWriter.println(String.format("const responsesPath = %s",
-                stringLiteral(getResponsesFile(target, testName).getAbsolutePath()), '\''));
+                stringLiteral(getResponsesFile(target, testName)), '\''));
     }
 
     /**

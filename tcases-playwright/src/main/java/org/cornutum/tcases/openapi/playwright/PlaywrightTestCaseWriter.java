@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 /**
- * Writes the source code for REST Assured test cases that execute API requests.
+ * Writes the source code for playwright test cases that execute API requests.
  */
 public class PlaywrightTestCaseWriter extends BaseTestCaseWriter
 {

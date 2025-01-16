@@ -59,6 +59,15 @@ public abstract class TypescriptTestWriter extends TestWriter<TestSource, TestTa
     }
 
     /**
+     * Writes the target test docstring to the given stream.
+     */
+    @Override
+    protected void writeDocstring( TestTarget target, String testName, IndentedWriter targetWriter)
+    {
+        super.writeDocstring(target, testName, targetWriter);
+    };
+
+    /**
      * Writes the target test opening to the given stream.
      */
     @Override

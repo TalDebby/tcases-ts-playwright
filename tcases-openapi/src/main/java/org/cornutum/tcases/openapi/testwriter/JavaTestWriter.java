@@ -55,6 +55,15 @@ public abstract class JavaTestWriter extends TestWriter<TestSource,JavaTestTarge
   protected abstract String getClassName( String testName);
 
   /**
+   * Writes the target test docstring to the given stream.
+   */
+  @Override
+  protected void writeDocstring( JavaTestTarget target, String testName, IndentedWriter targetWriter)
+  {
+    super.writeDocstring(target, testName, targetWriter);
+  };
+
+  /**
    * Writes the target test opening to the given stream.
    */
   @Override
